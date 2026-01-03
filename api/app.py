@@ -97,6 +97,52 @@ def write_providers_json(data):
         with open('providers.json', 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, indent=4, ensure_ascii=False)
 
+@app.route('/template/<template_name>')
+def get_template(template_name):
+    """
+    提供独立的模板文件访问
+    支持的模板名称:
+    - n26: config_template_groups_rule_set_tun.json (包含 N26 配置)
+    - fakeip: config_template_groups_rule_set_tun_fakeip.json
+    - no-groups: config_template_no_groups_tun_VN.json
+    """
+    template_mapping = {
+        'n26': 'config_template_groups_rule_set_tun.json',
+        'default': 'config_template_groups_rule_set_tun.json',
+        'fakeip': 'config_template_groups_rule_set_tun_fakeip.json',
+        'no-groups': 'config_template_no_groups_tun_VN.json',
+    }
+    
+    # 获取对应的模板文件名
+    template_file = template_mapping.get(template_name)
+    
+    if not template_file:
+        return Response(
+            json.dumps({'error': f'Template "{template_name}" not found. Available: {list(template_mapping.keys())}'}),
+            status=404,
+            content_type='application/json'
+        )
+    
+    template_path = os.path.join('config_template', template_file)
+    
+    if not os.path.exists(template_path):
+        return Response(
+            json.dumps({'error': f'Template file "{template_file}" not found'}),
+            status=404,
+            content_type='application/json'
+        )
+    
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template_content = f.read()
+        return Response(template_content, content_type='application/json; charset=utf-8')
+    except Exception as e:
+        return Response(
+            json.dumps({'error': f'Failed to read template: {str(e)}'}),
+            status=500,
+            content_type='application/json'
+        )
+
 @app.route('/')
 def index():
     template_list = get_template_list()
