@@ -9,6 +9,41 @@ import shutil
 import tempfile  # 导入 tempfile 模块
 from datetime import datetime, timedelta
 
+def smart_split_urls(url_string):
+    """
+    智能分割多个 URL，只在真正的 URL 边界处分割
+    规则：
+    1. 分割后的每个部分必须是有效的 URL（包含协议）
+    2. 如果分割后的部分不是有效 URL，则不分割（说明 | 是 URL 参数的一部分）
+    """
+    # 先按 | 分割
+    parts = url_string.split('|')
+    
+    # 如果只有一个部分，直接返回
+    if len(parts) == 1:
+        return parts
+    
+    # 检查每个部分是否是有效的 URL
+    valid_urls = []
+    supported_schemes = ['http', 'https', 'vmess', 'vless', 'ss', 'ssr', 'trojan', 'tuic', 'hysteria', 'hysteria2', 'hy2', 'wg', 'wireguard', 'socks', 'socks5']
+    
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        parsed = urlparse(part)
+        # 有效 URL 必须有 scheme（协议）
+        if parsed.scheme in supported_schemes:
+            valid_urls.append(part)
+    
+    # 如果有效 URL 数量 > 1，说明确实是多个订阅
+    # 如果只有 1 个或 0 个，说明 | 是 URL 参数的一部分，不应分割
+    if len(valid_urls) > 1:
+        return valid_urls
+    else:
+        # 返回原始字符串作为单个 URL
+        return [url_string]
+
 app = Flask(__name__, template_folder='../templates')  # 指定模板文件夹的路径
 app.secret_key = 'sing-box'  # 替换为实际的密钥
 data_json = {}
@@ -223,7 +258,8 @@ def config(url):
         parts = full_url.split('/api/v4/projects/')
         full_url = parts[0] + '/api/v4/projects/' + parts[1].replace('/', '%2F', 1)
     print (full_url)
-    url_parts = full_url.split('|')
+    # 使用智能分割函数，避免误分割 URL 参数中的 | 字符
+    url_parts = smart_split_urls(full_url)
     if len(url_parts) > 1:
         subscribe['url'] = full_url.split('url=', 1)[-1].split('|')[0] if full_url.startswith('url') else full_url.split('|')[0]
         subscribe['ex-node-name'] = enn_param
