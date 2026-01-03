@@ -1,14 +1,5 @@
 {
-    "builds": [
-        {
-            "src": "api/app.py",
-            "use": "@vercel/python",
-            "config": {
-                "maxLambdaSize": "50mb"
-            }
-        }
-    ],
     "rewrites": [
-        { "source": "/(.*)", "destination": "/api/app" }
+        { "source": "/(.*)", "destination": "/api/index" }
     ]
 }
