@@ -1,11 +1,14 @@
 {
-    "functions": {
-        "api/app.py": {
-          "maxDuration": 60
+    "builds": [
+        {
+            "src": "api/app.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
         }
-    },
-    "rewrites": [
-        { "source": "/(.*)", "destination": "/api/app" }
     ],
-    "outputDirectory": "tmp"
+    "routes": [
+        { "src": "/(.*)", "dest": "/api/app" }
+    ]
 }
